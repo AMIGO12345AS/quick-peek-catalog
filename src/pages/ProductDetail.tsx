@@ -12,11 +12,13 @@ import {
 import { ProductImage } from "@/components/ProductImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/hooks/useWishlist";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
+  const { has, toggle } = useWishlist();
+  const liked = id ? has(id) : false;
   const [activeImage, setActiveImage] = useState(0);
 
   const { data, isLoading, isError, error } = useQuery({
