@@ -1,5 +1,6 @@
 import { Check, Heart, Plus, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { ProductImage } from "./ProductImage";
 import { formatPrice, type Product } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -8,7 +9,7 @@ import { useCart } from "@/hooks/useCart";
 
 export const ProductCard = ({ product }: { product: Product }) => {
   const { has, toggle } = useWishlist();
-  const { has: inCart, add } = useCart();
+  const { has: inCart, add, remove } = useCart();
   const liked = has(product.id);
   const added = inCart(product.id);
   const hasSale =
@@ -32,7 +33,10 @@ export const ProductCard = ({ product }: { product: Product }) => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            const wasLiked = liked;
             toggle(product.id);
+            if (wasLiked) toast(`Removed from wishlist`, { description: product.name });
+            else toast.success(`Added to wishlist`, { description: product.name });
           }}
           aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={liked}
@@ -51,17 +55,23 @@ export const ProductCard = ({ product }: { product: Product }) => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            add(
-              {
-                id: String(product.id),
-                name: product.name,
-                price: Number(product.price) || 0,
-                image_url: product.image_url,
-              },
-              1,
-            );
+            if (added) {
+              remove(product.id);
+              toast(`Removed from cart`, { description: product.name });
+            } else {
+              add(
+                {
+                  id: String(product.id),
+                  name: product.name,
+                  price: Number(product.price) || 0,
+                  image_url: product.image_url,
+                },
+                1,
+              );
+              toast.success(`Added to cart`, { description: product.name });
+            }
           }}
-          aria-label={added ? `Added ${product.name} to cart` : `Add ${product.name} to cart`}
+          aria-label={added ? `Remove ${product.name} from cart` : `Add ${product.name} to cart`}
           className={cn(
             "absolute bottom-2.5 right-2.5 grid h-9 w-9 place-items-center rounded-full shadow-elevated transition-transform active:scale-95",
             added
