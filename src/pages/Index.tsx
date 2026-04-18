@@ -135,20 +135,18 @@ const Index = () => {
     return sorted;
   }, [allProducts, debouncedQuery, category, sort, priceRange]);
 
-  // Banner: product with biggest discount %, fallback to first
-  const featured = useMemo(() => {
-    if (!allProducts.length) return undefined;
-    let best: Product | undefined;
-    let bestPct = 0;
-    for (const p of allProducts) {
-      const pct = getPricing(p).discountPct;
-      if (pct > bestPct) {
-        bestPct = pct;
-        best = p;
-      }
-    }
-    return best ?? allProducts[0];
+  // Banner: top 3 by discount %, fallback to first product
+  const featuredList = useMemo(() => {
+    if (!allProducts.length) return [] as Product[];
+    const ranked = allProducts
+      .map((p) => ({ p, pct: getPricing(p).discountPct }))
+      .filter((x) => x.pct > 0)
+      .sort((a, b) => b.pct - a.pct)
+      .map((x) => x.p);
+    if (ranked.length === 0) return [allProducts[0]];
+    return ranked.slice(0, 3);
   }, [allProducts]);
+  const featured = featuredList[0];
 
   // Curated: top 8 by discount %, then fill with stable shuffle of the rest
   const curated = useMemo(() => {
