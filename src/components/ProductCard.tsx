@@ -33,7 +33,10 @@ export const ProductCard = ({ product }: { product: Product }) => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            const wasLiked = liked;
             toggle(product.id);
+            if (wasLiked) toast(`Removed from wishlist`, { description: product.name });
+            else toast.success(`Added to wishlist`, { description: product.name });
           }}
           aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={liked}

@@ -89,7 +89,13 @@ const ProductDetail = () => {
           </h1>
           <button
             type="button"
-            onClick={() => id && toggle(id)}
+            onClick={() => {
+              if (!id || !product) return;
+              const wasLiked = liked;
+              toggle(id);
+              if (wasLiked) toast(`Removed from wishlist`, { description: product.name });
+              else toast.success(`Added to wishlist`, { description: product.name });
+            }}
             aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
             className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
@@ -246,7 +252,7 @@ const ProductDetail = () => {
               <div className="hidden gap-2 md:flex">
                 <button
                   type="button"
-                  onClick={handleAddToCart}
+                  onClick={handleToggleCart}
                   className={cn(
                     "inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-base",
                     added
@@ -280,7 +286,7 @@ const ProductDetail = () => {
           <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:px-8">
             <button
               type="button"
-              onClick={handleAddToCart}
+              onClick={handleToggleCart}
               aria-label={added ? "Added to cart" : "Add to cart"}
               className={cn(
                 "inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
