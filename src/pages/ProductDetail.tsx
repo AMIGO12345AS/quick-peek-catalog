@@ -7,6 +7,7 @@ import {
   ExpiredLinkError,
   fetchProducts,
   formatPrice,
+  getPricing,
   parsePrice,
   whatsappFreshLinkRequest,
   whatsappLink,
@@ -73,9 +74,10 @@ const ProductDetail = () => {
     return [product.image_url];
   }, [product]);
 
-  const hasSale =
-    product?.original_price !== undefined &&
-    Number(product.original_price) > Number(product.price);
+  const pricing = product
+    ? getPricing(product)
+    : { display: 0, original: null, discountPct: 0, hasDeal: false };
+  const hasSale = pricing.hasDeal;
 
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
@@ -225,19 +227,24 @@ const ProductDetail = () => {
                 {product.name}
               </h2>
 
-              <div className="flex items-baseline gap-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <p
                   className={cn(
                     "text-2xl font-extrabold tracking-tight sm:text-3xl",
                     hasSale ? "text-sale" : "text-foreground",
                   )}
                 >
-                  {formatPrice(product.price)}
+                  {formatPrice(pricing.display)}
                 </p>
-                {hasSale && (
-                  <p className="text-sm font-medium text-muted-foreground line-through">
-                    {formatPrice(product.original_price!)}
-                  </p>
+                {hasSale && pricing.original !== null && (
+                  <>
+                    <p className="text-sm font-medium text-muted-foreground line-through">
+                      {formatPrice(pricing.original)}
+                    </p>
+                    <span className="rounded-full bg-sale/10 px-2 py-0.5 text-[11px] font-bold text-sale">
+                      {pricing.discountPct}% OFF
+                    </span>
+                  </>
                 )}
               </div>
 

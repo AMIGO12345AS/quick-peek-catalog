@@ -2,7 +2,7 @@ import { Check, Heart, Plus, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ProductImage } from "./ProductImage";
-import { formatPrice, parsePrice, type Product } from "@/lib/catalog";
+import { formatPrice, getPricing, parsePrice, type Product } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
@@ -12,9 +12,8 @@ export const ProductCard = ({ product }: { product: Product }) => {
   const { has: inCart, add, remove } = useCart();
   const liked = has(product.id);
   const added = inCart(product.id);
-  const hasSale =
-    product.original_price !== undefined &&
-    Number(product.original_price) > Number(product.price);
+  const pricing = getPricing(product);
+  const hasSale = pricing.hasDeal;
 
   return (
     <Link
@@ -103,14 +102,19 @@ export const ProductCard = ({ product }: { product: Product }) => {
         <h3 className="line-clamp-1 text-[13px] font-semibold leading-snug text-foreground sm:text-sm">
           {product.name}
         </h3>
-        <div className="flex items-baseline gap-1.5">
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
           <p className={cn("text-sm font-extrabold", hasSale ? "text-sale" : "text-foreground")}>
-            {formatPrice(product.price)}
+            {formatPrice(pricing.display)}
           </p>
-          {hasSale && (
-            <p className="text-[11px] font-medium text-muted-foreground line-through">
-              {formatPrice(product.original_price!)}
-            </p>
+          {hasSale && pricing.original !== null && (
+            <>
+              <p className="text-[11px] font-medium text-muted-foreground line-through">
+                {formatPrice(pricing.original)}
+              </p>
+              <span className="rounded-full bg-sale/10 px-1.5 py-0.5 text-[9px] font-bold leading-none text-sale">
+                {pricing.discountPct}% OFF
+              </span>
+            </>
           )}
         </div>
       </div>

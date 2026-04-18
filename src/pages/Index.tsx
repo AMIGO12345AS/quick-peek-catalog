@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ExpiredLinkError,
   fetchProducts,
+  getPricing,
   parsePrice,
   whatsappFreshLinkRequest,
   type Product,
@@ -56,10 +57,21 @@ const Index = () => {
   }, [allProducts]);
 
   const categoryThumbs = useMemo(() => {
-    const map: Record<string, string | undefined> = {};
+    // Pick the highest-priced product image per category for a premium look
+    const best: Record<string, { price: number; image: string }> = {};
     for (const p of allProducts) {
-      if (p.category && !map[p.category]) map[p.category] = p.image_url;
+      if (!p.category || !p.image_url) continue;
+      const price = Math.max(
+        parsePrice(p.original_price ?? p.price),
+        parsePrice(p.price),
+      );
+      const current = best[p.category];
+      if (!current || price > current.price) {
+        best[p.category] = { price, image: p.image_url };
+      }
     }
+    const map: Record<string, string | undefined> = {};
+    for (const k of Object.keys(best)) map[k] = best[k].image;
     return map;
   }, [allProducts]);
 
@@ -123,8 +135,40 @@ const Index = () => {
     return sorted;
   }, [allProducts, debouncedQuery, category, sort, priceRange]);
 
-  const featured = allProducts[0];
-  const curated = allProducts.slice(0, 8);
+  // Banner: product with biggest discount %, fallback to first
+  const featured = useMemo(() => {
+    if (!allProducts.length) return undefined;
+    let best: Product | undefined;
+    let bestPct = 0;
+    for (const p of allProducts) {
+      const pct = getPricing(p).discountPct;
+      if (pct > bestPct) {
+        bestPct = pct;
+        best = p;
+      }
+    }
+    return best ?? allProducts[0];
+  }, [allProducts]);
+
+  // Curated: top 8 by discount %, then fill with stable shuffle of the rest
+  const curated = useMemo(() => {
+    if (!allProducts.length) return [] as Product[];
+    const withPct = allProducts.map((p) => ({ p, pct: getPricing(p).discountPct }));
+    const deals = withPct
+      .filter((x) => x.pct > 0)
+      .sort((a, b) => b.pct - a.pct)
+      .map((x) => x.p);
+    if (deals.length >= 8) return deals.slice(0, 8);
+
+    // Stable shuffle of remaining, seeded by day so it doesn't jitter
+    const seed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const rest = allProducts.filter((p) => !deals.includes(p));
+    const shuffled = rest
+      .map((p, i) => ({ p, k: Math.sin(seed * 9301 + i * 49297) }))
+      .sort((a, b) => a.k - b.k)
+      .map((x) => x.p);
+    return [...deals, ...shuffled].slice(0, 8);
+  }, [allProducts]);
 
   const isFiltering =
     category !== "All" ||
