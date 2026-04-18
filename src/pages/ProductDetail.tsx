@@ -1,18 +1,30 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MessageCircle } from "lucide-react";
-import { fetchProducts, formatPrice, whatsappLink } from "@/lib/catalog";
+import { ArrowLeft, Loader2, MessageCircle } from "lucide-react";
+import {
+  ExpiredLinkError,
+  fetchProducts,
+  formatPrice,
+  whatsappFreshLinkRequest,
+  whatsappLink,
+} from "@/lib/catalog";
 import { ProductImage } from "@/components/ProductImage";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["products"],
     queryFn: fetchProducts,
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, err) => {
+      if (err instanceof ExpiredLinkError) return false;
+      return failureCount < 2;
+    },
   });
+
+  const isExpired = error instanceof ExpiredLinkError;
 
   const product = data?.find((p) => String(p.id) === String(id));
 
@@ -39,12 +51,49 @@ const ProductDetail = () => {
       <main className="mx-auto max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
         {isLoading ? (
           <div className="space-y-4">
+            <div
+              className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground"
+              role="status"
+              aria-live="polite"
+            >
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              <span>Loading product…</span>
+            </div>
             <Skeleton className="aspect-square w-full rounded-lg" />
             <Skeleton className="h-6 w-2/3" />
             <Skeleton className="h-5 w-1/4" />
             <Skeleton className="h-20 w-full" />
           </div>
-        ) : isError || !product ? (
+        ) : isExpired ? (
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <p className="text-base font-medium">This catalog link has expired</p>
+            <p className="max-w-md text-sm text-muted-foreground">
+              Please message us on WhatsApp to request a fresh catalog link.
+            </p>
+            <a
+              href={whatsappFreshLinkRequest()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Request fresh link on WhatsApp
+            </a>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <p className="text-base font-medium">Products currently unavailable</p>
+            <p className="text-sm text-muted-foreground">
+              Please try again in a moment.
+            </p>
+            <Link
+              to="/"
+              className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
+            >
+              Back to catalog
+            </Link>
+          </div>
+        ) : !product ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
             <p className="text-base font-medium">Product not found.</p>
             <Link

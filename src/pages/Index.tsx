@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProducts, type Product } from "@/lib/catalog";
+import { ExpiredLinkError, fetchProducts, whatsappFreshLinkRequest, type Product } from "@/lib/catalog";
 import { CatalogHeader } from "@/components/CatalogHeader";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PackageOpen, RotateCw } from "lucide-react";
+import { Loader2, MessageCircle, PackageOpen, RotateCw } from "lucide-react";
 
 const useDebounced = <T,>(value: T, delay = 200) => {
   const [v, setV] = useState(value);
@@ -16,11 +16,17 @@ const useDebounced = <T,>(value: T, delay = 200) => {
 };
 
 const Index = () => {
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["products"],
     queryFn: fetchProducts,
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, err) => {
+      if (err instanceof ExpiredLinkError) return false;
+      return failureCount < 2;
+    },
   });
+
+  const isExpired = error instanceof ExpiredLinkError;
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -53,30 +59,61 @@ const Index = () => {
 
       <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="overflow-hidden rounded-lg border border-border">
-                <Skeleton className="aspect-square w-full rounded-none" />
-                <div className="space-y-2 p-3 sm:p-4">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-            <p className="text-base font-medium">We couldn't load the catalog.</p>
-            <p className="text-sm text-muted-foreground">Check your connection and try again.</p>
-            <button
-              onClick={() => refetch()}
-              className="mt-2 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
+          <>
+            <div
+              className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground"
+              role="status"
+              aria-live="polite"
             >
-              <RotateCw className={"h-4 w-4 " + (isFetching ? "animate-spin" : "")} />
-              Retry
-            </button>
-          </div>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              <span>Loading products…</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="overflow-hidden rounded-lg border border-border">
+                  <Skeleton className="aspect-square w-full rounded-none" />
+                  <div className="space-y-2 p-3 sm:p-4">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : isError ? (
+          isExpired ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+              <p className="text-base font-medium">This catalog link has expired</p>
+              <p className="max-w-md text-sm text-muted-foreground">
+                Please message us on WhatsApp to request a fresh catalog link.
+              </p>
+              <a
+                href={whatsappFreshLinkRequest()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Request fresh link on WhatsApp
+              </a>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+              <p className="text-base font-medium">Products currently unavailable</p>
+              <p className="text-sm text-muted-foreground">
+                We couldn't load the catalog right now. Please try again in a moment.
+              </p>
+              <button
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="mt-2 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-60"
+              >
+                <RotateCw className={"h-4 w-4 " + (isFetching ? "animate-spin" : "")} />
+                {isFetching ? "Retrying…" : "Retry"}
+              </button>
+            </div>
+          )
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
             <PackageOpen className="h-8 w-8 text-muted-foreground" aria-hidden />
