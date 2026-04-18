@@ -21,7 +21,21 @@ const ProductDetail = () => {
   const { has, toggle } = useWishlist();
   const { has: inCart, add } = useCart();
   const liked = id ? has(id) : false;
+  const added = id ? inCart(id) : false;
   const [activeImage, setActiveImage] = useState(0);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    add(
+      {
+        id: String(product.id),
+        name: product.name,
+        price: Number(product.price) || 0,
+        image_url: product.image_url,
+      },
+      1,
+    );
+  };
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["products"],
