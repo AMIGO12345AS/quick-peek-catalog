@@ -45,7 +45,6 @@ const Index = () => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState<SortKey>("featured");
-  const [price, setPrice] = useState<PriceRange>("all");
   const debouncedQuery = useDebounced(query, 150);
 
   const allProducts = data ?? [];
@@ -64,23 +63,55 @@ const Index = () => {
     return map;
   }, [allProducts]);
 
+  // Compute price bounds from data, rounded to nice steps
+  const priceBounds = useMemo(() => {
+    const prices = allProducts
+      .map((p) => parsePrice(p.price))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    if (!prices.length) return { min: 0, max: 10000 };
+    const rawMin = Math.min(...prices);
+    const rawMax = Math.max(...prices);
+    const span = rawMax - rawMin;
+    const step = span > 5000 ? 100 : span > 1000 ? 50 : 10;
+    const min = roundDown(rawMin, step);
+    const max = Math.max(min + step, roundUp(rawMax, step));
+    return { min, max };
+  }, [allProducts]);
+
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+
+  // Initialize / reset range when bounds change (data loaded)
+  useEffect(() => {
+    setPriceRange(([lo, hi]) => {
+      if (lo === 0 && hi === 0) return [priceBounds.min, priceBounds.max];
+      return [
+        Math.max(priceBounds.min, Math.min(lo, priceBounds.max)),
+        Math.min(priceBounds.max, Math.max(hi, priceBounds.min)),
+      ];
+    });
+  }, [priceBounds.min, priceBounds.max]);
+
+  const priceActive =
+    priceRange[0] > priceBounds.min || priceRange[1] < priceBounds.max;
+
   const filtered: Product[] = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
+    const [lo, hi] = priceRange;
     const list = allProducts.filter((p) => {
       const matchCat = category === "All" || p.category === category;
       const matchQ = !q || p.name?.toLowerCase().includes(q);
-      const n = Number(p.price);
-      const matchPrice = !Number.isFinite(n) ? true : inPriceRange(n, price);
+      const n = parsePrice(p.price);
+      const matchPrice = !Number.isFinite(n) ? true : n >= lo && n <= hi;
       return matchCat && matchQ && matchPrice;
     });
 
     const sorted = [...list];
     switch (sort) {
       case "price-asc":
-        sorted.sort((a, b) => Number(a.price) - Number(b.price));
+        sorted.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
         break;
       case "price-desc":
-        sorted.sort((a, b) => Number(b.price) - Number(a.price));
+        sorted.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
         break;
       case "name-asc":
         sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -90,7 +121,7 @@ const Index = () => {
         break;
     }
     return sorted;
-  }, [allProducts, debouncedQuery, category, sort, price]);
+  }, [allProducts, debouncedQuery, category, sort, priceRange]);
 
   const featured = allProducts[0];
   const curated = allProducts.slice(0, 8);
@@ -99,7 +130,7 @@ const Index = () => {
     category !== "All" ||
     debouncedQuery.trim().length > 0 ||
     sort !== "featured" ||
-    price !== "all";
+    priceActive;
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
