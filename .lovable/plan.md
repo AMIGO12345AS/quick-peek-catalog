@@ -1,48 +1,35 @@
 
-## Modern Product Catalog — Plan
+## Plan: Smarter pricing display + curation logic
 
-A fast, mobile-first catalog that pulls live from your API and lets visitors browse, search, filter, and enquire via WhatsApp.
+### 1. Pricing display (offer_price support)
 
-### Pages & navigation
-- `/` — Catalog (grid + search + category filter)
-- `/product/:id` — Product detail view
-- Client-side routing; back button returns to catalog with scroll position preserved
+Currently `ProductCard.tsx` and `ProductDetail.tsx` use `original_price` vs `price`. The user is now describing an `offer_price` field — meaning `price` is the original and `offer_price` is the discounted one. I'll support **both** shapes so nothing breaks:
 
-### Layout & design
-- **Style**: clean, minimal, modern. White background, neutral grays, **black as the single accent**. Generous spacing, large readable typography (Inter or similar system stack).
-- **Header**: minimal, brand name on the left (placeholder "Catalog" — you'll send the real name to swap in).
-- **Sticky search bar** under the header with a subtle shadow on scroll.
-- **Category filter**: horizontally scrollable pill row under the search (auto-derived from API `category` field, plus "All").
-- Smooth scrolling, no heavy animations — only subtle hover/press states.
+- If `offer_price` exists and `< price` → `offer_price` is the main (red) price, `price` is strikethrough, show "X% OFF" badge.
+- Else if `original_price` exists and `> price` → keep current behavior (price is the deal, `original_price` strikethrough), show badge.
+- Else → just show `price`, no badge.
 
-### Catalog grid
-- 2 columns on mobile, 3 on tablet, 4 on desktop.
-- **Product card**: square image on top, name, price (bold), 2-line truncated description. Entire card is clickable.
-- Consistent card heights via fixed image aspect ratio and clamped text.
-- **Lazy-loaded images** (`loading="lazy"`) with a neutral placeholder while loading and a graceful fallback icon if the image fails.
+**Files**:
+- `src/lib/catalog.ts`: add `offer_price?: number | string` to `ProductExtra`. Add helper `getPricing(product)` returning `{ display, original, discountPct, hasDeal }` so the logic lives in one place.
+- `src/components/ProductCard.tsx`: use `getPricing` — render red `display`, strikethrough `original`, and a small "X% OFF" pill (rounded-full, bg red/10, text red, text-[10px], next to price).
+- `src/pages/ProductDetail.tsx`: same `getPricing` usage, with a slightly bigger badge.
 
-### Product detail view
-- Large hero image (with same fallback handling).
-- Product name, price (prominent), category tag, full description.
-- **Back button** (top-left) returns to the catalog.
-- **Sticky bottom CTA**: full-width black "Enquire on WhatsApp" button. Opens `https://wa.me/<NUMBER>?text=Hi, I'm interested in <Product Name> (<Price>)`. The number will be a clearly-marked placeholder constant (`WHATSAPP_NUMBER`) you can swap in one place later.
+### 2. Promo banner — biggest discount product
 
-### Data handling
-- Single fetch on app load via React Query — cached, no refetch storms.
-- **Loading**: skeleton cards in the grid; skeleton block on detail page.
-- **Empty state**: friendly "No products found" message (also used when search/filter returns nothing).
-- **Error state**: clean retry message if the API fails.
-- **Image errors**: swap to a neutral placeholder automatically.
+In `src/pages/Index.tsx` replace `const featured = allProducts[0]` with: pick the product with the highest discount % (using `getPricing`). If no product has a deal, fall back to `allProducts[0]`.
 
-### Search & filter
-- Real-time filter by product name (case-insensitive, debounced).
-- Category pills filter combined with search.
-- Both run client-side over the cached product list — instant, no extra requests.
+### 3. Curated For You — top 8 by discount %
 
-### Performance
-- React Query caching, lazy images, no large animation libraries, minimal CSS.
-- Tailwind utility classes only; no extra UI dependencies beyond what's already in the project.
+Replace `const curated = allProducts.slice(0, 8)` with: sort by discount % desc, take top 8. If fewer than 8 have discounts, fill the remainder with a stable shuffle of the rest (seeded by date so it stays consistent within a session, not jumping on every render).
 
-### What I'll need from you after approval
-- Your **brand name** for the header.
-- Your **WhatsApp number** (when ready) — until then it stays as a clearly-marked placeholder.
+### 4. Category circle thumbnails — highest-priced item per category
+
+In `src/pages/Index.tsx`, replace the "first product per category" logic in `categoryThumbs` with "highest-priced product per category" (using `parsePrice` on the displayed/original price).
+
+### Files touched
+- `src/lib/catalog.ts` — add `offer_price` type + `getPricing` helper
+- `src/components/ProductCard.tsx` — pricing block + discount badge
+- `src/pages/ProductDetail.tsx` — pricing block + discount badge
+- `src/pages/Index.tsx` — featured pick, curated pick, category thumb pick
+
+No new dependencies. No layout shifts beyond a small badge next to the price.
