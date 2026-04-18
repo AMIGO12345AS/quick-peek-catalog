@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ExpiredLinkError, fetchProducts, whatsappFreshLinkRequest, type Product } from "@/lib/catalog";
+import {
+  ExpiredLinkError,
+  fetchProducts,
+  parsePrice,
+  whatsappFreshLinkRequest,
+  type Product,
+} from "@/lib/catalog";
 import { CatalogHeader } from "@/components/CatalogHeader";
 import { PromoBanner } from "@/components/PromoBanner";
 import { CategoryCircles } from "@/components/CategoryCircles";
 import { CuratedRow } from "@/components/CuratedRow";
 import { ProductCard } from "@/components/ProductCard";
 import { BottomTabBar } from "@/components/BottomTabBar";
-import { FilterChips, type PriceRange, type SortKey } from "@/components/FilterChips";
+import { FilterChips, type SortKey } from "@/components/FilterChips";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, MessageCircle, PackageOpen, RotateCw } from "lucide-react";
 
