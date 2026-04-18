@@ -1,7 +1,8 @@
-import { Search, Heart } from "lucide-react";
+import { Search, Heart, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BRAND_NAME } from "@/lib/catalog";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
 
 type Props = {
   query: string;
@@ -9,7 +10,8 @@ type Props = {
 };
 
 export const CatalogHeader = ({ query, onQueryChange }: Props) => {
-  const { count } = useWishlist();
+  const { count: wishCount } = useWishlist();
+  const { count: cartCount } = useCart();
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
@@ -45,9 +47,22 @@ export const CatalogHeader = ({ query, onQueryChange }: Props) => {
             className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-secondary sm:h-11 sm:w-11"
           >
             <Heart className="h-4 w-4" />
-            {count > 0 && (
+            {wishCount > 0 && (
               <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-sale px-1 text-[9px] font-bold text-sale-foreground">
-                {count}
+                {wishCount}
+              </span>
+            )}
+          </Link>
+
+          <Link
+            to="/cart"
+            aria-label="Cart"
+            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-secondary sm:h-11 sm:w-11"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-sale px-1 text-[9px] font-bold text-sale-foreground">
+                {cartCount}
               </span>
             )}
           </Link>

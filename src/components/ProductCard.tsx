@@ -1,13 +1,16 @@
-import { Heart, Star } from "lucide-react";
+import { Check, Heart, Plus, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProductImage } from "./ProductImage";
 import { formatPrice, type Product } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
 
 export const ProductCard = ({ product }: { product: Product }) => {
   const { has, toggle } = useWishlist();
+  const { has: inCart, add } = useCart();
   const liked = has(product.id);
+  const added = inCart(product.id);
   const hasSale =
     product.original_price !== undefined &&
     Number(product.original_price) > Number(product.price);
@@ -41,6 +44,32 @@ export const ProductCard = ({ product }: { product: Product }) => {
               liked ? "fill-sale text-sale" : "text-foreground",
             )}
           />
+        </button>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            add(
+              {
+                id: String(product.id),
+                name: product.name,
+                price: Number(product.price) || 0,
+                image_url: product.image_url,
+              },
+              1,
+            );
+          }}
+          aria-label={added ? `Added ${product.name} to cart` : `Add ${product.name} to cart`}
+          className={cn(
+            "absolute bottom-2.5 right-2.5 grid h-9 w-9 place-items-center rounded-full shadow-elevated transition-transform active:scale-95",
+            added
+              ? "bg-sale text-sale-foreground"
+              : "bg-foreground text-background",
+          )}
+        >
+          {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
         </button>
       </div>
 
