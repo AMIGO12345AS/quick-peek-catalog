@@ -1,5 +1,7 @@
-import { Search, Bell } from "lucide-react";
+import { Search, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 import { BRAND_NAME } from "@/lib/catalog";
+import { useWishlist } from "@/hooks/useWishlist";
 
 type Props = {
   query: string;
@@ -7,17 +9,19 @@ type Props = {
 };
 
 export const CatalogHeader = ({ query, onQueryChange }: Props) => {
+  const { count } = useWishlist();
+
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 pb-3 pt-3 sm:px-8 sm:pt-4">
         <div className="flex items-center gap-3">
-          <a href="/" className="flex shrink-0 items-center">
+          <Link to="/" className="flex shrink-0 items-center" aria-label="Home">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-foreground text-background sm:h-10 sm:w-10">
               <span className="text-base font-extrabold sm:text-lg">
                 {BRAND_NAME.charAt(0).toUpperCase()}
               </span>
             </span>
-          </a>
+          </Link>
 
           <div className="relative flex-1">
             <Search
@@ -35,14 +39,18 @@ export const CatalogHeader = ({ query, onQueryChange }: Props) => {
             />
           </div>
 
-          <button
-            type="button"
-            aria-label="Notifications"
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
             className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-secondary sm:h-11 sm:w-11"
           >
-            <Bell className="h-4 w-4" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-sale" aria-hidden />
-          </button>
+            <Heart className="h-4 w-4" />
+            {count > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-sale px-1 text-[9px] font-bold text-sale-foreground">
+                {count}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
     </header>
