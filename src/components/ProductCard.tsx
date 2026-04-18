@@ -6,26 +6,28 @@ export const ProductCard = ({ product }: { product: Product }) => {
   return (
     <Link
       to={`/product/${product.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex flex-col gap-3 focus:outline-none"
     >
-      <ProductImage
-        src={product.image_url}
-        alt={product.name}
-        className="aspect-square w-full"
-        imgClassName="transition-transform duration-300 group-hover:scale-[1.04]"
-      />
-      <div className="flex flex-1 flex-col gap-1 p-3 sm:p-4">
-        <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium text-foreground sm:text-base">
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-secondary">
+        <ProductImage
+          src={product.image_url}
+          alt={product.name}
+          className="aspect-[4/5] w-full"
+          imgClassName="transition-transform duration-500 group-hover:scale-[1.04]"
+        />
+        {product.category && (
+          <span className="absolute left-3 top-3 rounded-full bg-background/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground backdrop-blur">
+            {product.category}
+          </span>
+        )}
+      </div>
+      <div className="flex items-start justify-between gap-3 px-1">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:text-[15px]">
           {product.name}
         </h3>
-        <p className="text-base font-bold text-foreground sm:text-lg">
+        <p className="shrink-0 text-sm font-extrabold text-foreground sm:text-[15px]">
           {formatPrice(product.price)}
         </p>
-        {product.description && (
-          <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-            {product.description}
-          </p>
-        )}
       </div>
     </Link>
   );
