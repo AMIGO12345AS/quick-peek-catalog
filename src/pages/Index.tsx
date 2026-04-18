@@ -303,7 +303,7 @@ const Index = () => {
                 onSortChange={setSort}
                 priceRange={priceRange}
                 priceBounds={priceBounds}
-                onPriceRangeChange={setPriceRange}
+                onPriceRangeChange={handlePriceRangeChange}
                 category={category}
                 onClearCategory={() => setCategory("All")}
                 query={query}
