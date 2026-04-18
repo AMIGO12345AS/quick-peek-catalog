@@ -9,11 +9,39 @@ export const BRAND_NAME = "Catalog";
 // Optional fields some products may have
 export type ProductExtra = {
   original_price?: number | string;
+  offer_price?: number | string;
   rating?: number;
   reviews?: number;
   brand?: string;
   images?: string[];
 };
+
+export type Pricing = {
+  display: number;
+  original: number | null;
+  discountPct: number;
+  hasDeal: boolean;
+};
+
+export function getPricing(
+  product: Pick<Product, "price"> & Partial<Pick<ProductExtra, "offer_price" | "original_price">>,
+): Pricing {
+  const price = parsePrice(product.price);
+  const offer = product.offer_price !== undefined ? parsePrice(product.offer_price) : NaN;
+  const orig = product.original_price !== undefined ? parsePrice(product.original_price) : NaN;
+
+  // Case 1: offer_price exists and is a discount on price
+  if (Number.isFinite(offer) && offer > 0 && offer < price) {
+    const pct = Math.round(((price - offer) / price) * 100);
+    return { display: offer, original: price, discountPct: pct, hasDeal: pct > 0 };
+  }
+  // Case 2: original_price exists and is higher than price
+  if (Number.isFinite(orig) && orig > price && price > 0) {
+    const pct = Math.round(((orig - price) / orig) * 100);
+    return { display: price, original: orig, discountPct: pct, hasDeal: pct > 0 };
+  }
+  return { display: price, original: null, discountPct: 0, hasDeal: false };
+}
 
 export type Product = {
   id: string | number;
