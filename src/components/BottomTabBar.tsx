@@ -1,15 +1,16 @@
 import { NavLink } from "react-router-dom";
-import { Home, Compass, Bell, User } from "lucide-react";
+import { Home, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/hooks/useWishlist";
 
 const items = [
   { to: "/", label: "Home", Icon: Home, end: true },
-  { to: "/explore", label: "Explore", Icon: Compass, end: false },
-  { to: "/alerts", label: "Alerts", Icon: Bell, end: false },
-  { to: "/profile", label: "Profile", Icon: User, end: false },
+  { to: "/wishlist", label: "Wishlist", Icon: Heart, end: false },
 ];
 
 export const BottomTabBar = () => {
+  const { count } = useWishlist();
+
   return (
     <nav
       aria-label="Primary"
@@ -24,17 +25,27 @@ export const BottomTabBar = () => {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-semibold transition-colors",
+                  "relative flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[11px] font-semibold transition-colors",
                   isActive ? "text-foreground" : "text-muted-foreground",
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon
-                    className={cn("h-5 w-5", isActive ? "fill-foreground/10" : "")}
-                    strokeWidth={isActive ? 2.4 : 1.8}
-                  />
+                  <span className="relative">
+                    <Icon
+                      className={cn(
+                        "h-5 w-5",
+                        isActive && to === "/wishlist" && "fill-sale text-sale",
+                      )}
+                      strokeWidth={isActive ? 2.4 : 1.8}
+                    />
+                    {to === "/wishlist" && count > 0 && (
+                      <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-sale px-1 text-[9px] font-bold text-sale-foreground">
+                        {count}
+                      </span>
+                    )}
+                  </span>
                   <span>{label}</span>
                 </>
               )}

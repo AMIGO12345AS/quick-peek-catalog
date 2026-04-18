@@ -1,12 +1,13 @@
 import { Heart, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { ProductImage } from "./ProductImage";
 import { formatPrice, type Product } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/hooks/useWishlist";
 
 export const ProductCard = ({ product }: { product: Product }) => {
-  const [liked, setLiked] = useState(false);
+  const { has, toggle } = useWishlist();
+  const liked = has(product.id);
   const hasSale =
     product.original_price !== undefined &&
     Number(product.original_price) > Number(product.price);
@@ -27,9 +28,11 @@ export const ProductCard = ({ product }: { product: Product }) => {
           type="button"
           onClick={(e) => {
             e.preventDefault();
-            setLiked((v) => !v);
+            e.stopPropagation();
+            toggle(product.id);
           }}
           aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={liked}
           className="absolute right-2.5 top-2.5 grid h-8 w-8 place-items-center rounded-full bg-background/95 shadow-soft backdrop-blur transition-transform active:scale-95"
         >
           <Heart
