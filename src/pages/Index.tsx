@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ExpiredLinkError, fetchProducts, whatsappFreshLinkRequest, type Product } from "@/lib/catalog";
 import { CatalogHeader } from "@/components/CatalogHeader";
-import { HeroFeature } from "@/components/HeroFeature";
-
-import { NewInShowcase } from "@/components/NewInShowcase";
+import { PromoBanner } from "@/components/PromoBanner";
+import { CategoryCircles } from "@/components/CategoryCircles";
+import { CuratedRow } from "@/components/CuratedRow";
 import { ProductCard } from "@/components/ProductCard";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, MessageCircle, PackageOpen, RotateCw } from "lucide-react";
 
@@ -35,41 +36,44 @@ const Index = () => {
   const [category, setCategory] = useState("All");
   const debouncedQuery = useDebounced(query, 150);
 
+  const allProducts = data ?? [];
+
   const categories = useMemo(() => {
     const set = new Set<string>();
-    (data ?? []).forEach((p) => p.category && set.add(p.category));
+    allProducts.forEach((p) => p.category && set.add(p.category));
     return ["All", ...Array.from(set).sort()];
-  }, [data]);
+  }, [allProducts]);
+
+  const categoryThumbs = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const p of allProducts) {
+      if (p.category && !map[p.category]) map[p.category] = p.image_url;
+    }
+    return map;
+  }, [allProducts]);
 
   const filtered: Product[] = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
-    return (data ?? []).filter((p) => {
+    return allProducts.filter((p) => {
       const matchCat = category === "All" || p.category === category;
       const matchQ = !q || p.name?.toLowerCase().includes(q);
       return matchCat && matchQ;
     });
-  }, [data, debouncedQuery, category]);
+  }, [allProducts, debouncedQuery, category]);
 
-  const allProducts = data ?? [];
   const featured = allProducts[0];
-  const newIn = allProducts.slice(0, 2);
+  const curated = allProducts.slice(0, 8);
 
   const isFiltering = category !== "All" || debouncedQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <CatalogHeader
-        query={query}
-        onQueryChange={setQuery}
-        categories={categories}
-        activeCategory={category}
-        onCategoryChange={setCategory}
-      />
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <CatalogHeader query={query} onQueryChange={setQuery} />
 
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-4 sm:space-y-12 sm:px-8 sm:py-10">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-4 sm:space-y-10 sm:px-8 sm:py-8">
         {isLoading ? (
           <>
-            <Skeleton className="h-[420px] w-full rounded-[2rem]" />
+            <Skeleton className="h-[160px] w-full rounded-2xl" />
             <div
               className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground"
               role="status"
@@ -78,19 +82,19 @@ const Index = () => {
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               <span>Loading collection…</span>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="space-y-3">
-                  <Skeleton className="aspect-[4/5] w-full rounded-[1.5rem]" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/3" />
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="aspect-[4/5] w-full rounded-2xl" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/3" />
                 </div>
               ))}
             </div>
           </>
         ) : isError ? (
           isExpired ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-card py-24 text-center shadow-card">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-card py-20 text-center shadow-card">
               <p className="text-base font-semibold">This catalog link has expired</p>
               <p className="max-w-md text-sm text-muted-foreground">
                 Please message us on WhatsApp to request a fresh catalog link.
@@ -106,7 +110,7 @@ const Index = () => {
               </a>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-card py-24 text-center shadow-card">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-card py-20 text-center shadow-card">
               <p className="text-base font-semibold">Products currently unavailable</p>
               <p className="text-sm text-muted-foreground">
                 We couldn't load the catalog right now. Please try again in a moment.
@@ -123,24 +127,33 @@ const Index = () => {
           )
         ) : (
           <>
-            {!isFiltering && featured && (
-              <HeroFeature product={featured} />
+            {!isFiltering && (
+              <>
+                <PromoBanner product={featured} />
+                <CategoryCircles
+                  categories={categories}
+                  activeCategory={category}
+                  onCategoryChange={setCategory}
+                  thumbs={categoryThumbs}
+                />
+                {curated.length > 0 && (
+                  <CuratedRow title="Curated For You" products={curated} />
+                )}
+              </>
             )}
 
             <section id="all-products" className="scroll-mt-24">
-              <div className="mb-3 flex items-end justify-between sm:mb-5">
-                <div>
-                  <h2 className="text-xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-                    {isFiltering ? "Results" : "Shop all"}
-                  </h2>
-                </div>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs">
+              <div className="mb-3 flex items-end justify-between px-0.5">
+                <h2 className="text-sm font-bold tracking-tight text-foreground sm:text-base">
+                  {isFiltering ? "Results" : "Shop All"}
+                </h2>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   {filtered.length} {filtered.length === 1 ? "item" : "items"}
                 </span>
               </div>
 
               {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 rounded-[1.5rem] bg-card py-16 text-center shadow-card sm:rounded-[2rem] sm:py-24">
+                <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card py-16 text-center shadow-card">
                   <PackageOpen className="h-8 w-8 text-muted-foreground" aria-hidden />
                   <p className="text-base font-semibold">No products found</p>
                   <p className="text-sm text-muted-foreground">
@@ -155,23 +168,11 @@ const Index = () => {
                 </div>
               )}
             </section>
-
-            {!isFiltering && newIn.length > 0 && (
-              <NewInShowcase
-                title="New in"
-                subtitle="Just landed — handpicked for the season."
-                products={newIn}
-              />
-            )}
           </>
         )}
       </main>
 
-      <footer className="mt-16 border-t border-border bg-background py-10 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          © {new Date().getFullYear()} · Crafted with care
-        </p>
-      </footer>
+      <BottomTabBar />
     </div>
   );
 };
