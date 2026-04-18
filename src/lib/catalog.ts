@@ -84,6 +84,36 @@ export function whatsappLink(product: Pick<Product, "name" | "price">) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }
 
+export type WhatsappOrderItem = {
+  name: string;
+  price: number | string;
+  qty: number;
+};
+
+export function whatsappOrderLink(items: WhatsappOrderItem[]) {
+  if (!items.length) {
+    return `https://wa.me/${WHATSAPP_NUMBER}`;
+  }
+  const lines = items.map(
+    (it, i) =>
+      `${i + 1}. ${it.name} × ${it.qty} — ${formatPrice(
+        Number(it.price) * it.qty,
+      )}`,
+  );
+  const total = items.reduce(
+    (acc, it) => acc + Number(it.price) * it.qty,
+    0,
+  );
+  const text = [
+    "Hi! I'd like to place an order:",
+    "",
+    ...lines,
+    "",
+    `Total: ${formatPrice(total)}`,
+  ].join("\n");
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+}
+
 export function whatsappFreshLinkRequest() {
   const text = "Hi, my catalog link has expired. Could you please send me a fresh link?";
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
