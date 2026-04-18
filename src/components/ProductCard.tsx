@@ -103,7 +103,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
           {product.name}
         </h3>
         <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-          <p className={cn("text-sm font-extrabold", hasSale ? "text-sale" : "text-foreground")}>
+          <p className={cn("text-sm font-extrabold", hasSale ? "text-success" : "text-foreground")}>
             {formatPrice(pricing.display)}
           </p>
           {hasSale && pricing.original !== null && (
@@ -111,7 +111,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
               <p className="text-[11px] font-medium text-muted-foreground line-through">
                 {formatPrice(pricing.original)}
               </p>
-              <span className="rounded-full bg-sale/10 px-1.5 py-0.5 text-[9px] font-bold leading-none text-sale">
+              <span className="rounded-full bg-success/10 px-1.5 py-0.5 text-[9px] font-bold leading-none text-success">
                 {pricing.discountPct}% OFF
               </span>
             </>
