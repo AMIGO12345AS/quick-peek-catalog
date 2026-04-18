@@ -1,15 +1,18 @@
 import { NavLink } from "react-router-dom";
-import { Home, Heart } from "lucide-react";
+import { Home, Heart, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
-
-const items = [
-  { to: "/", label: "Home", Icon: Home, end: true },
-  { to: "/wishlist", label: "Wishlist", Icon: Heart, end: false },
-];
+import { useCart } from "@/hooks/useCart";
 
 export const BottomTabBar = () => {
-  const { count } = useWishlist();
+  const { count: wishCount } = useWishlist();
+  const { count: cartCount } = useCart();
+
+  const items = [
+    { to: "/", label: "Home", Icon: Home, end: true, badge: 0 },
+    { to: "/wishlist", label: "Wishlist", Icon: Heart, end: false, badge: wishCount },
+    { to: "/cart", label: "Cart", Icon: ShoppingBag, end: false, badge: cartCount },
+  ];
 
   return (
     <nav
@@ -18,7 +21,7 @@ export const BottomTabBar = () => {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 py-1.5">
-        {items.map(({ to, label, Icon, end }) => (
+        {items.map(({ to, label, Icon, end, badge }) => (
           <li key={to} className="flex-1">
             <NavLink
               to={to}
@@ -40,9 +43,9 @@ export const BottomTabBar = () => {
                       )}
                       strokeWidth={isActive ? 2.4 : 1.8}
                     />
-                    {to === "/wishlist" && count > 0 && (
+                    {badge > 0 && (
                       <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-sale px-1 text-[9px] font-bold text-sale-foreground">
-                        {count}
+                        {badge}
                       </span>
                     )}
                   </span>

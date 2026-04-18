@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Heart, Loader2, MessageCircle, Star } from "lucide-react";
+import { ArrowLeft, Check, Heart, Loader2, MessageCircle, ShoppingBag, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   ExpiredLinkError,
@@ -13,13 +13,29 @@ import { ProductImage } from "@/components/ProductImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { has, toggle } = useWishlist();
+  const { has: inCart, add } = useCart();
   const liked = id ? has(id) : false;
+  const added = id ? inCart(id) : false;
   const [activeImage, setActiveImage] = useState(0);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    add(
+      {
+        id: String(product.id),
+        name: product.name,
+        price: Number(product.price) || 0,
+        image_url: product.image_url,
+      },
+      1,
+    );
+  };
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["products"],
@@ -220,15 +236,30 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              <a
-                href={whatsappLink(product)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden h-14 w-full items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring md:inline-flex md:text-base"
-              >
-                <MessageCircle className="h-5 w-5" />
-                Enquire on WhatsApp
-              </a>
+              <div className="hidden gap-2 md:flex">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className={cn(
+                    "inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-base",
+                    added
+                      ? "bg-foreground text-background"
+                      : "bg-background text-foreground hover:bg-secondary",
+                  )}
+                >
+                  {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
+                  {added ? "Added to Cart" : "Add to Cart"}
+                </button>
+                <a
+                  href={whatsappLink(product)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-base"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Enquire on WhatsApp
+                </a>
+              </div>
             </div>
           </article>
         )}
@@ -239,15 +270,30 @@ const ProductDetail = () => {
           className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md md:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          <div className="mx-auto max-w-6xl px-4 py-3 sm:px-8">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:px-8">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              aria-label={added ? "Added to cart" : "Add to cart"}
+              className={cn(
+                "inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                added
+                  ? "bg-foreground text-background"
+                  : "bg-background text-foreground",
+              )}
+            >
+              {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
+              {added ? "Added" : "Add to Cart"}
+            </button>
             <a
               href={whatsappLink(product)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-full bg-foreground py-4 text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Enquire on WhatsApp"
+              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MessageCircle className="h-5 w-5" />
-              Enquire on WhatsApp
+              WhatsApp
             </a>
           </div>
         </div>
