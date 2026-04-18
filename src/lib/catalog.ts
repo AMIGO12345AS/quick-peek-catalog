@@ -67,8 +67,17 @@ export async function fetchProducts(): Promise<Product[]> {
   return list;
 }
 
+export function parsePrice(price: number | string | undefined | null): number {
+  if (price === undefined || price === null) return 0;
+  if (typeof price === "number") return Number.isFinite(price) ? price : 0;
+  // Strip currency symbols, commas, spaces — keep digits, dot, minus
+  const cleaned = String(price).replace(/[^\d.-]/g, "");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export function formatPrice(price: number | string) {
-  const n = typeof price === "number" ? price : Number(price);
+  const n = parsePrice(price);
   if (Number.isFinite(n)) {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
