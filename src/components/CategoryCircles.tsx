@@ -31,7 +31,7 @@ export const CategoryCircles = ({
         </a>
       </div>
 
-      <div className="-mx-4 overflow-x-auto px-4 no-scrollbar sm:-mx-8 sm:px-8">
+      <div className="-mx-4 overflow-x-auto px-4 py-1 no-scrollbar sm:-mx-8 sm:px-8">
         <div className="flex gap-4">
           {categories.map((c) => {
             const active = c === activeCategory;
