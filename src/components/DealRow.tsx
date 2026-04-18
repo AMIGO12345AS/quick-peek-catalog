@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProductImage } from "./ProductImage";
 import { formatPrice, type Product } from "@/lib/catalog";
@@ -5,53 +6,52 @@ import { formatPrice, type Product } from "@/lib/catalog";
 type Props = {
   title: string;
   subtitle?: string;
+  accent?: "deal" | "fresh" | "primary";
   products: Product[];
 };
 
-/**
- * Editorial section: small label, large serif title, hairline rule,
- * horizontally scrolling product cards. No coloured headers, no badges.
- */
-export const DealRow = ({ title, subtitle, products }: Props) => {
+const accentMap: Record<NonNullable<Props["accent"]>, string> = {
+  deal: "bg-gradient-deal",
+  fresh: "bg-gradient-fresh",
+  primary: "bg-gradient-primary",
+};
+
+export const DealRow = ({ title, subtitle, accent = "primary", products }: Props) => {
   if (products.length === 0) return null;
 
   return (
-    <section className="space-y-5">
-      <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
+    <section className="rounded-2xl bg-card shadow-card">
+      <div className={`flex items-center justify-between rounded-t-2xl px-4 py-3 text-primary-foreground sm:px-5 ${accentMap[accent]}`}>
         <div>
-          {subtitle && (
-            <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-              {subtitle}
-            </p>
-          )}
-          <h2 className="font-display mt-1 text-2xl tracking-tight text-foreground sm:text-3xl">
-            {title}
-          </h2>
+          <h2 className="text-base font-bold tracking-tight sm:text-lg">{title}</h2>
+          {subtitle && <p className="text-xs opacity-90 sm:text-sm">{subtitle}</p>}
         </div>
+        <span className="hidden text-xs font-medium opacity-90 sm:inline">View all</span>
       </div>
 
-      <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex gap-5 sm:gap-7">
+      <div className="-mx-px overflow-x-auto px-3 py-3 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-3 sm:gap-4">
           {products.map((p) => (
             <Link
               key={p.id}
               to={`/product/${p.id}`}
-              className="group flex w-44 shrink-0 flex-col gap-3 sm:w-52"
+              className="group flex w-36 shrink-0 flex-col gap-1.5 rounded-lg border border-border bg-background p-2 transition-shadow hover:shadow-elevated sm:w-44"
             >
               <ProductImage
                 src={p.image_url}
                 alt={p.name}
-                className="aspect-[4/5] w-full overflow-hidden rounded-sm bg-secondary"
-                imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
+                className="aspect-square w-full overflow-hidden rounded-md"
+                imgClassName="transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="space-y-1">
-                <h3 className="line-clamp-1 text-sm font-medium text-foreground">
-                  {p.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">{formatPrice(p.price)}</p>
-              </div>
+              <h3 className="line-clamp-2 min-h-[2.5rem] text-xs font-medium text-foreground sm:text-sm">
+                {p.name}
+              </h3>
+              <p className="text-sm font-bold text-foreground">{formatPrice(p.price)}</p>
             </Link>
           ))}
+          <div className="flex w-12 shrink-0 items-center justify-center text-muted-foreground">
+            <ChevronRight className="h-5 w-5" />
+          </div>
         </div>
       </div>
     </section>
