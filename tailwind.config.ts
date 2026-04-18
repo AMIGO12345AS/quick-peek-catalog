@@ -47,6 +47,14 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        sale: {
+          DEFAULT: "hsl(var(--sale))",
+          foreground: "hsl(var(--sale-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -56,10 +64,8 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         surface: {
-          sand: "hsl(var(--surface-sand))",
-          stone: "hsl(var(--surface-stone))",
-          blush: "hsl(var(--surface-blush))",
-          sage: "hsl(var(--surface-sage))",
+          banner: "hsl(var(--surface-banner))",
+          soft: "hsl(var(--surface-soft))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -78,16 +84,14 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       backgroundImage: {
-        "gradient-primary": "var(--gradient-primary)",
-        "gradient-cream": "var(--gradient-cream)",
-        "gradient-sand": "var(--gradient-sand)",
-        "gradient-blush": "var(--gradient-blush)",
-        "gradient-sage": "var(--gradient-sage)",
+        "gradient-primary": "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)))",
+        "gradient-banner": "linear-gradient(135deg, hsl(var(--surface-banner)) 0%, hsl(var(--surface-soft)) 100%)",
       },
       boxShadow: {
         card: "var(--shadow-card)",
+        soft: "var(--shadow-soft)",
         elevated: "var(--shadow-elevated)",
-        banner: "var(--shadow-banner)",
+        nav: "var(--shadow-nav)",
       },
       keyframes: {
         "accordion-down": {
