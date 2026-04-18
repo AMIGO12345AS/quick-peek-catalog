@@ -67,8 +67,17 @@ export async function fetchProducts(): Promise<Product[]> {
   return list;
 }
 
+export function parsePrice(price: number | string | undefined | null): number {
+  if (price === undefined || price === null) return 0;
+  if (typeof price === "number") return Number.isFinite(price) ? price : 0;
+  // Strip currency symbols, commas, spaces — keep digits, dot, minus
+  const cleaned = String(price).replace(/[^\d.-]/g, "");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export function formatPrice(price: number | string) {
-  const n = typeof price === "number" ? price : Number(price);
+  const n = parsePrice(price);
   if (Number.isFinite(n)) {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -79,9 +88,16 @@ export function formatPrice(price: number | string) {
   return String(price);
 }
 
-export function whatsappLink(product: Pick<Product, "name" | "price">) {
-  const text = `Hi, I'm interested in ${product.name} (${formatPrice(product.price)})`;
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+export function whatsappLink(
+  product: Pick<Product, "name" | "price">,
+  details: WhatsappOrderDetails = {},
+) {
+  const lines = [
+    `Hi, I'm interested in ${product.name} (${formatPrice(product.price)})`,
+  ];
+  if (details.name) lines.push(`Name: ${details.name}`);
+  if (details.pincode) lines.push(`Pincode: ${details.pincode}`);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 export type WhatsappOrderItem = {

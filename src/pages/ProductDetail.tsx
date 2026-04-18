@@ -7,6 +7,7 @@ import {
   ExpiredLinkError,
   fetchProducts,
   formatPrice,
+  parsePrice,
   whatsappFreshLinkRequest,
   whatsappLink,
 } from "@/lib/catalog";
@@ -15,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
+import { CustomerDetailsDialog, type CustomerDetails } from "@/components/CustomerDetailsDialog";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -24,6 +26,13 @@ const ProductDetail = () => {
   const liked = id ? has(id) : false;
   const added = id ? inCart(id) : false;
   const [activeImage, setActiveImage] = useState(0);
+  const [enquireOpen, setEnquireOpen] = useState(false);
+
+  const handleEnquireSubmit = (details: CustomerDetails) => {
+    if (!product) return;
+    const url = whatsappLink(product, details);
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   const handleToggleCart = () => {
     if (!product) return;
@@ -35,7 +44,7 @@ const ProductDetail = () => {
         {
           id: String(product.id),
           name: product.name,
-          price: Number(product.price) || 0,
+          price: parsePrice(product.price),
           image_url: product.image_url,
         },
         1,
@@ -263,15 +272,14 @@ const ProductDetail = () => {
                   {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
                   {added ? "Added to Cart" : "Add to Cart"}
                 </button>
-                <a
-                  href={whatsappLink(product)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setEnquireOpen(true)}
                   className="inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-base"
                 >
                   <MessageCircle className="h-5 w-5" />
                   Enquire on WhatsApp
-                </a>
+                </button>
               </div>
             </div>
           </article>
@@ -298,18 +306,28 @@ const ProductDetail = () => {
               {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
               {added ? "Added" : "Add to Cart"}
             </button>
-            <a
-              href={whatsappLink(product)}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setEnquireOpen(true)}
               aria-label="Enquire on WhatsApp"
               className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MessageCircle className="h-5 w-5" />
               WhatsApp
-            </a>
+            </button>
           </div>
         </div>
+      )}
+
+      {product && (
+        <CustomerDetailsDialog
+          open={enquireOpen}
+          onClose={() => setEnquireOpen(false)}
+          title="Enquire on WhatsApp"
+          description="Share your name and pincode so we can confirm availability and delivery."
+          ctaLabel="Send enquiry"
+          onSubmit={handleEnquireSubmit}
+        />
       )}
     </div>
   );
