@@ -12,11 +12,13 @@ import {
 import { ProductImage } from "@/components/ProductImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/hooks/useWishlist";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
+  const { has, toggle } = useWishlist();
+  const liked = id ? has(id) : false;
   const [activeImage, setActiveImage] = useState(0);
 
   const { data, isLoading, isError, error } = useQuery({
@@ -64,7 +66,7 @@ const ProductDetail = () => {
           </h1>
           <button
             type="button"
-            onClick={() => setLiked((v) => !v)}
+            onClick={() => id && toggle(id)}
             aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
             className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >

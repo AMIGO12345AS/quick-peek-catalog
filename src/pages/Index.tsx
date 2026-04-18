@@ -7,6 +7,7 @@ import { CategoryCircles } from "@/components/CategoryCircles";
 import { CuratedRow } from "@/components/CuratedRow";
 import { ProductCard } from "@/components/ProductCard";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { FilterChips, type PriceRange, type SortKey } from "@/components/FilterChips";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, MessageCircle, PackageOpen, RotateCw } from "lucide-react";
 
@@ -17,6 +18,17 @@ const useDebounced = <T,>(value: T, delay = 200) => {
     return () => clearTimeout(t);
   }, [value, delay]);
   return v;
+};
+
+const inPriceRange = (price: number, range: PriceRange) => {
+  switch (range) {
+    case "under-500": return price < 500;
+    case "500-1500": return price >= 500 && price < 1500;
+    case "1500-5000": return price >= 1500 && price < 5000;
+    case "5000-plus": return price >= 5000;
+    case "all":
+    default: return true;
+  }
 };
 
 const Index = () => {
@@ -34,6 +46,8 @@ const Index = () => {
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
+  const [sort, setSort] = useState<SortKey>("featured");
+  const [price, setPrice] = useState<PriceRange>("all");
   const debouncedQuery = useDebounced(query, 150);
 
   const allProducts = data ?? [];
@@ -54,17 +68,40 @@ const Index = () => {
 
   const filtered: Product[] = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
-    return allProducts.filter((p) => {
+    const list = allProducts.filter((p) => {
       const matchCat = category === "All" || p.category === category;
       const matchQ = !q || p.name?.toLowerCase().includes(q);
-      return matchCat && matchQ;
+      const n = Number(p.price);
+      const matchPrice = !Number.isFinite(n) ? true : inPriceRange(n, price);
+      return matchCat && matchQ && matchPrice;
     });
-  }, [allProducts, debouncedQuery, category]);
+
+    const sorted = [...list];
+    switch (sort) {
+      case "price-asc":
+        sorted.sort((a, b) => Number(a.price) - Number(b.price));
+        break;
+      case "price-desc":
+        sorted.sort((a, b) => Number(b.price) - Number(a.price));
+        break;
+      case "name-asc":
+        sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        break;
+      case "featured":
+      default:
+        break;
+    }
+    return sorted;
+  }, [allProducts, debouncedQuery, category, sort, price]);
 
   const featured = allProducts[0];
   const curated = allProducts.slice(0, 8);
 
-  const isFiltering = category !== "All" || debouncedQuery.trim().length > 0;
+  const isFiltering =
+    category !== "All" ||
+    debouncedQuery.trim().length > 0 ||
+    sort !== "featured" ||
+    price !== "all";
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -142,8 +179,8 @@ const Index = () => {
               </>
             )}
 
-            <section id="all-products" className="scroll-mt-24">
-              <div className="mb-3 flex items-end justify-between px-0.5">
+            <section id="all-products" className="scroll-mt-24 space-y-3">
+              <div className="flex items-end justify-between px-0.5">
                 <h2 className="text-sm font-bold tracking-tight text-foreground sm:text-base">
                   {isFiltering ? "Results" : "Shop All"}
                 </h2>
@@ -152,12 +189,23 @@ const Index = () => {
                 </span>
               </div>
 
+              <FilterChips
+                sort={sort}
+                onSortChange={setSort}
+                price={price}
+                onPriceChange={setPrice}
+                category={category}
+                onClearCategory={() => setCategory("All")}
+                query={query}
+                onClearQuery={() => setQuery("")}
+              />
+
               {filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card py-16 text-center shadow-card">
                   <PackageOpen className="h-8 w-8 text-muted-foreground" aria-hidden />
                   <p className="text-base font-semibold">No products found</p>
                   <p className="text-sm text-muted-foreground">
-                    Try a different search or category.
+                    Try a different search, category, or price range.
                   </p>
                 </div>
               ) : (
