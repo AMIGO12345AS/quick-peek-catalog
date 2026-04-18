@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -51,6 +55,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        surface: {
+          sand: "hsl(var(--surface-sand))",
+          stone: "hsl(var(--surface-stone))",
+          blush: "hsl(var(--surface-blush))",
+          sage: "hsl(var(--surface-sage))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -69,10 +79,10 @@ export default {
       },
       backgroundImage: {
         "gradient-primary": "var(--gradient-primary)",
-        "gradient-accent": "var(--gradient-accent)",
-        "gradient-hero": "var(--gradient-hero)",
-        "gradient-deal": "var(--gradient-deal)",
-        "gradient-fresh": "var(--gradient-fresh)",
+        "gradient-cream": "var(--gradient-cream)",
+        "gradient-sand": "var(--gradient-sand)",
+        "gradient-blush": "var(--gradient-blush)",
+        "gradient-sage": "var(--gradient-sage)",
       },
       boxShadow: {
         card: "var(--shadow-card)",
