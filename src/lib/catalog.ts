@@ -88,9 +88,16 @@ export function formatPrice(price: number | string) {
   return String(price);
 }
 
-export function whatsappLink(product: Pick<Product, "name" | "price">) {
-  const text = `Hi, I'm interested in ${product.name} (${formatPrice(product.price)})`;
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+export function whatsappLink(
+  product: Pick<Product, "name" | "price">,
+  details: WhatsappOrderDetails = {},
+) {
+  const lines = [
+    `Hi, I'm interested in ${product.name} (${formatPrice(product.price)})`,
+  ];
+  if (details.name) lines.push(`Name: ${details.name}`);
+  if (details.pincode) lines.push(`Pincode: ${details.pincode}`);
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 export type WhatsappOrderItem = {
