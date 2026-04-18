@@ -90,7 +90,15 @@ export type WhatsappOrderItem = {
   qty: number;
 };
 
-export function whatsappOrderLink(items: WhatsappOrderItem[]) {
+export type WhatsappOrderDetails = {
+  name?: string;
+  pincode?: string;
+};
+
+export function whatsappOrderLink(
+  items: WhatsappOrderItem[],
+  details: WhatsappOrderDetails = {},
+) {
   if (!items.length) {
     return `https://wa.me/${WHATSAPP_NUMBER}`;
   }
@@ -104,12 +112,16 @@ export function whatsappOrderLink(items: WhatsappOrderItem[]) {
     (acc, it) => acc + Number(it.price) * it.qty,
     0,
   );
+  const customerLines: string[] = [];
+  if (details.name) customerLines.push(`Name: ${details.name}`);
+  if (details.pincode) customerLines.push(`Pincode: ${details.pincode}`);
   const text = [
     "Hi! I'd like to place an order:",
     "",
     ...lines,
     "",
     `Total: ${formatPrice(total)}`,
+    ...(customerLines.length ? ["", ...customerLines] : []),
   ].join("\n");
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }

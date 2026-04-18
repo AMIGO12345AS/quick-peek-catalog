@@ -1,19 +1,57 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { ArrowLeft, Minus, MessageCircle, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { z } from "zod";
+import { toast } from "sonner";
 import { useCart } from "@/hooks/useCart";
 import { ProductImage } from "@/components/ProductImage";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { formatPrice, whatsappOrderLink } from "@/lib/catalog";
 
+const checkoutSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .nonempty({ message: "Please enter your name" })
+    .max(80, { message: "Name must be under 80 characters" }),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^[1-9][0-9]{5}$/, { message: "Enter a valid 6-digit pincode" }),
+});
+
 const Cart = () => {
   const { items, increment, decrement, remove, clear, count, subtotal } = useCart();
+  const [name, setName] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [errors, setErrors] = useState<{ name?: string; pincode?: string }>({});
 
+  const handleSend = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const result = checkoutSchema.safeParse({ name, pincode });
+    if (!result.success) {
+      e.preventDefault();
+      const fieldErrors: { name?: string; pincode?: string } = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as "name" | "pincode";
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error("Please complete your details", {
+        description: "Name and 6-digit pincode are required.",
+      });
+      return;
+    }
+    setErrors({});
+  };
+
+  const validated = checkoutSchema.safeParse({ name, pincode });
   const orderHref = whatsappOrderLink(
     items.map((i) => ({ name: i.name, price: i.price, qty: i.qty })),
+    validated.success ? validated.data : {},
   );
 
   return (
-    <div className="min-h-screen bg-background pb-40 md:pb-24">
+    <div className="min-h-screen bg-background pb-56 md:pb-40">
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3 sm:px-8 sm:py-4">
           <Link
@@ -56,70 +94,133 @@ const Cart = () => {
             </Link>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="flex gap-3 rounded-2xl bg-card p-3 shadow-card"
-              >
-                <Link
-                  to={`/product/${item.id}`}
-                  className="block h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary"
+          <>
+            <ul className="space-y-3">
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex gap-3 rounded-2xl bg-card p-3 shadow-card"
                 >
-                  <ProductImage
-                    src={item.image_url}
-                    alt={item.name}
-                    className="h-full w-full"
-                    imgClassName="h-full w-full object-cover"
-                  />
-                </Link>
-                <div className="flex min-w-0 flex-1 flex-col justify-between">
-                  <div className="flex items-start justify-between gap-2">
-                    <Link
-                      to={`/product/${item.id}`}
-                      className="line-clamp-2 text-sm font-semibold leading-snug text-foreground"
-                    >
-                      {item.name}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => remove(item.id)}
-                      aria-label={`Remove ${item.name}`}
-                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-extrabold text-foreground">
-                      {formatPrice(item.price * item.qty)}
-                    </p>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-border bg-background p-0.5">
+                  <Link
+                    to={`/product/${item.id}`}
+                    className="block h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary"
+                  >
+                    <ProductImage
+                      src={item.image_url}
+                      alt={item.name}
+                      className="h-full w-full"
+                      imgClassName="h-full w-full object-cover"
+                    />
+                  </Link>
+                  <div className="flex min-w-0 flex-1 flex-col justify-between">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link
+                        to={`/product/${item.id}`}
+                        className="line-clamp-2 text-sm font-semibold leading-snug text-foreground"
+                      >
+                        {item.name}
+                      </Link>
                       <button
                         type="button"
-                        onClick={() => decrement(item.id)}
-                        aria-label="Decrease quantity"
-                        className="grid h-7 w-7 place-items-center rounded-full text-foreground hover:bg-secondary"
+                        onClick={() => remove(item.id)}
+                        aria-label={`Remove ${item.name}`}
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
                       >
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="min-w-6 text-center text-xs font-bold tabular-nums">
-                        {item.qty}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => increment(item.id)}
-                        aria-label="Increase quantity"
-                        className="grid h-7 w-7 place-items-center rounded-full text-foreground hover:bg-secondary"
-                      >
-                        <Plus className="h-3 w-3" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-extrabold text-foreground">
+                        {formatPrice(item.price * item.qty)}
+                      </p>
+                      <div className="inline-flex items-center gap-1 rounded-full border border-border bg-background p-0.5">
+                        <button
+                          type="button"
+                          onClick={() => decrement(item.id)}
+                          aria-label="Decrease quantity"
+                          className="grid h-7 w-7 place-items-center rounded-full text-foreground hover:bg-secondary"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="min-w-6 text-center text-xs font-bold tabular-nums">
+                          {item.qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => increment(item.id)}
+                          aria-label="Increase quantity"
+                          className="grid h-7 w-7 place-items-center rounded-full text-foreground hover:bg-secondary"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
+                </li>
+              ))}
+            </ul>
+
+            <section className="mt-6 rounded-2xl bg-card p-4 shadow-card">
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                Your details
+              </h2>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="customer-name" className="text-xs font-semibold text-foreground">
+                    Full name
+                  </label>
+                  <input
+                    id="customer-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
+                    }}
+                    maxLength={80}
+                    autoComplete="name"
+                    placeholder="e.g. Aarav Sharma"
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? "name-error" : undefined}
+                    className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  {errors.name && (
+                    <p id="name-error" className="text-xs font-medium text-sale">
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
-              </li>
-            ))}
-          </ul>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="customer-pincode" className="text-xs font-semibold text-foreground">
+                    Delivery pincode
+                  </label>
+                  <input
+                    id="customer-pincode"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={pincode}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      setPincode(v);
+                      if (errors.pincode) setErrors((p) => ({ ...p, pincode: undefined }));
+                    }}
+                    maxLength={6}
+                    autoComplete="postal-code"
+                    placeholder="6-digit pincode"
+                    aria-invalid={!!errors.pincode}
+                    aria-describedby={errors.pincode ? "pincode-error" : undefined}
+                    className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium tabular-nums text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  {errors.pincode && (
+                    <p id="pincode-error" className="text-xs font-medium text-sale">
+                      {errors.pincode}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          </>
         )}
       </main>
 
@@ -139,6 +240,7 @@ const Cart = () => {
               href={orderHref}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleSend}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MessageCircle className="h-5 w-5" />
