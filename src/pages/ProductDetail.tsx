@@ -7,6 +7,7 @@ import {
   ExpiredLinkError,
   fetchProducts,
   formatPrice,
+  parsePrice,
   whatsappFreshLinkRequest,
   whatsappLink,
 } from "@/lib/catalog";
@@ -35,7 +36,7 @@ const ProductDetail = () => {
         {
           id: String(product.id),
           name: product.name,
-          price: Number(product.price) || 0,
+          price: parsePrice(product.price),
           image_url: product.image_url,
         },
         1,

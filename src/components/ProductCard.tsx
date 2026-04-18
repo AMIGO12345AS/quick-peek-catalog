@@ -2,7 +2,7 @@ import { Check, Heart, Plus, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ProductImage } from "./ProductImage";
-import { formatPrice, type Product } from "@/lib/catalog";
+import { formatPrice, parsePrice, type Product } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
@@ -63,7 +63,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
                 {
                   id: String(product.id),
                   name: product.name,
-                  price: Number(product.price) || 0,
+                  price: parsePrice(product.price),
                   image_url: product.image_url,
                 },
                 1,
