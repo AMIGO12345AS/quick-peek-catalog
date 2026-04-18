@@ -272,15 +272,14 @@ const ProductDetail = () => {
                   {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
                   {added ? "Added to Cart" : "Add to Cart"}
                 </button>
-                <a
-                  href={whatsappLink(product)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setEnquireOpen(true)}
                   className="inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-base"
                 >
                   <MessageCircle className="h-5 w-5" />
                   Enquire on WhatsApp
-                </a>
+                </button>
               </div>
             </div>
           </article>
@@ -307,18 +306,28 @@ const ProductDetail = () => {
               {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
               {added ? "Added" : "Add to Cart"}
             </button>
-            <a
-              href={whatsappLink(product)}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setEnquireOpen(true)}
               aria-label="Enquire on WhatsApp"
               className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-sm font-bold text-background shadow-elevated transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MessageCircle className="h-5 w-5" />
               WhatsApp
-            </a>
+            </button>
           </div>
         </div>
+      )}
+
+      {product && (
+        <CustomerDetailsDialog
+          open={enquireOpen}
+          onClose={() => setEnquireOpen(false)}
+          title="Enquire on WhatsApp"
+          description="Share your name and pincode so we can confirm availability and delivery."
+          ctaLabel="Send enquiry"
+          onSubmit={handleEnquireSubmit}
+        />
       )}
     </div>
   );
