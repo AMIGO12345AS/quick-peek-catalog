@@ -19,6 +19,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { has, toggle } = useWishlist();
+  const { has: inCart, add } = useCart();
   const liked = id ? has(id) : false;
   const [activeImage, setActiveImage] = useState(0);
 
