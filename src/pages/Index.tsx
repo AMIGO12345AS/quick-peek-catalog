@@ -91,10 +91,14 @@ const Index = () => {
     return map;
   }, [allProducts]);
 
+  // Use the displayed price (offer price if present) for bounds + filter
+  // so the slider matches what users actually see on cards.
+  const displayPriceOf = (p: Product) => getPricing(p).display;
+
   // Compute price bounds from data, rounded to nice steps
   const priceBounds = useMemo(() => {
     const prices = allProducts
-      .map((p) => parsePrice(p.price))
+      .map(displayPriceOf)
       .filter((n) => Number.isFinite(n) && n > 0);
     if (!prices.length) return { min: 0, max: 10000 };
     const rawMin = Math.min(...prices);
@@ -107,20 +111,34 @@ const Index = () => {
   }, [allProducts]);
 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [priceTouched, setPriceTouched] = useState(false);
 
-  // Initialize / reset range when bounds change (data loaded)
+  // Sync range to bounds whenever bounds change AND the user hasn't moved the slider.
   useEffect(() => {
-    setPriceRange(([lo, hi]) => {
-      if (lo === 0 && hi === 0) return [priceBounds.min, priceBounds.max];
-      return [
+    if (!priceTouched) {
+      setPriceRange([priceBounds.min, priceBounds.max]);
+    } else {
+      // Clamp existing range into new bounds
+      setPriceRange(([lo, hi]) => [
         Math.max(priceBounds.min, Math.min(lo, priceBounds.max)),
         Math.min(priceBounds.max, Math.max(hi, priceBounds.min)),
-      ];
-    });
+      ]);
+    }
+  }, [priceBounds.min, priceBounds.max, priceTouched]);
+
+  const handlePriceRangeChange = useCallback((range: [number, number]) => {
+    setPriceTouched(true);
+    setPriceRange(range);
+  }, []);
+
+  const handleResetPriceRange = useCallback(() => {
+    setPriceTouched(false);
+    setPriceRange([priceBounds.min, priceBounds.max]);
   }, [priceBounds.min, priceBounds.max]);
 
   const priceActive =
-    priceRange[0] > priceBounds.min || priceRange[1] < priceBounds.max;
+    priceTouched &&
+    (priceRange[0] > priceBounds.min || priceRange[1] < priceBounds.max);
 
   const filtered: Product[] = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
@@ -128,18 +146,22 @@ const Index = () => {
     const list = allProducts.filter((p) => {
       const matchCat = category === "All" || p.category === category;
       const matchQ = !q || p.name?.toLowerCase().includes(q);
-      const n = parsePrice(p.price);
-      const matchPrice = !Number.isFinite(n) ? true : n >= lo && n <= hi;
+      const n = displayPriceOf(p);
+      const matchPrice = !priceActive
+        ? true
+        : !Number.isFinite(n)
+          ? true
+          : n >= lo && n <= hi;
       return matchCat && matchQ && matchPrice;
     });
 
     const sorted = [...list];
     switch (sort) {
       case "price-asc":
-        sorted.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
+        sorted.sort((a, b) => displayPriceOf(a) - displayPriceOf(b));
         break;
       case "price-desc":
-        sorted.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+        sorted.sort((a, b) => displayPriceOf(b) - displayPriceOf(a));
         break;
       case "name-asc":
         sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -149,7 +171,7 @@ const Index = () => {
         break;
     }
     return sorted;
-  }, [allProducts, debouncedQuery, category, sort, priceRange]);
+  }, [allProducts, debouncedQuery, category, sort, priceRange, priceActive]);
 
   // Banner: top 3 by discount %, fallback to first product
   const featuredList = useMemo(() => {
@@ -281,7 +303,7 @@ const Index = () => {
                 onSortChange={setSort}
                 priceRange={priceRange}
                 priceBounds={priceBounds}
-                onPriceRangeChange={setPriceRange}
+                onPriceRangeChange={handlePriceRangeChange}
                 category={category}
                 onClearCategory={() => setCategory("All")}
                 query={query}
