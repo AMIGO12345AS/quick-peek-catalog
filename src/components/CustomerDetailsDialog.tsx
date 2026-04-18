@@ -92,7 +92,7 @@ export const CustomerDetailsDialog = ({
     } catch {
       /* ignore */
     }
-    onSubmit(result.data);
+    onSubmit(result.data as CustomerDetails);
     onClose();
   };
 
