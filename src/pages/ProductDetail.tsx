@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
+import { CustomerDetailsDialog, type CustomerDetails } from "@/components/CustomerDetailsDialog";
 
 const ProductDetail = () => {
   const { id } = useParams();
