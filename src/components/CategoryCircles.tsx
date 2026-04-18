@@ -47,7 +47,7 @@ export const CategoryCircles = ({
                   className={cn(
                     "relative grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-secondary transition-all",
                     active
-                      ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
+                      ? "ring-2 ring-foreground"
                       : "ring-1 ring-border",
                   )}
                 >
