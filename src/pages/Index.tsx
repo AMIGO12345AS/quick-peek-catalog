@@ -237,7 +237,7 @@ const Index = () => {
           <>
             {!isFiltering && (
               <>
-                <PromoBanner product={featured} />
+                <PromoBanner products={featuredList} product={featured} />
                 <CategoryCircles
                   categories={categories}
                   activeCategory={category}
