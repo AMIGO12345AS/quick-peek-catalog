@@ -70,10 +70,10 @@ export async function fetchProducts(): Promise<Product[]> {
 export function formatPrice(price: number | string) {
   const n = typeof price === "number" ? price : Number(price);
   if (Number.isFinite(n)) {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 2,
+      currency: "INR",
+      maximumFractionDigits: 0,
     }).format(n);
   }
   return String(price);
