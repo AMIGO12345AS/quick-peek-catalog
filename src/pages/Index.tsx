@@ -26,16 +26,8 @@ const useDebounced = <T,>(value: T, delay = 200) => {
   return v;
 };
 
-const inPriceRange = (price: number, range: PriceRange) => {
-  switch (range) {
-    case "under-500": return price < 500;
-    case "500-1500": return price >= 500 && price < 1500;
-    case "1500-5000": return price >= 1500 && price < 5000;
-    case "5000-plus": return price >= 5000;
-    case "all":
-    default: return true;
-  }
-};
+const roundDown = (n: number, step: number) => Math.floor(n / step) * step;
+const roundUp = (n: number, step: number) => Math.ceil(n / step) * step;
 
 const Index = () => {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
