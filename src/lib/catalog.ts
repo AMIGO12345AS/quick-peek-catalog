@@ -1,8 +1,8 @@
 export const API_URL =
   "https://catalog-api.muvassirwork.workers.dev/?t=c13e98de2ebfafd2ce6b9716347e305fdc16d01a5d8885f20824a7c16042cfc3";
 
-// TODO: replace with the real WhatsApp number (international format, no + or spaces)
-export const WHATSAPP_NUMBER = "10000000000";
+// WhatsApp number in international format, no + or spaces
+export const WHATSAPP_NUMBER = "917558998847";
 
 export const BRAND_NAME = "Catalog";
 
