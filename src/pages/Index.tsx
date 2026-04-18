@@ -221,8 +221,9 @@ const Index = () => {
               <FilterChips
                 sort={sort}
                 onSortChange={setSort}
-                price={price}
-                onPriceChange={setPrice}
+                priceRange={priceRange}
+                priceBounds={priceBounds}
+                onPriceRangeChange={setPriceRange}
                 category={category}
                 onClearCategory={() => setCategory("All")}
                 query={query}
