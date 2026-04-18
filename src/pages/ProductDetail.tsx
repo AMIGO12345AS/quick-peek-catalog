@@ -231,7 +231,7 @@ const ProductDetail = () => {
                 <p
                   className={cn(
                     "text-2xl font-extrabold tracking-tight sm:text-3xl",
-                    hasSale ? "text-sale" : "text-foreground",
+                    hasSale ? "text-success" : "text-foreground",
                   )}
                 >
                   {formatPrice(pricing.display)}
@@ -241,7 +241,7 @@ const ProductDetail = () => {
                     <p className="text-sm font-medium text-muted-foreground line-through">
                       {formatPrice(pricing.original)}
                     </p>
-                    <span className="rounded-full bg-sale/10 px-2 py-0.5 text-[11px] font-bold text-sale">
+                    <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">
                       {pricing.discountPct}% OFF
                     </span>
                   </>
