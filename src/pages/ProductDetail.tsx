@@ -26,6 +26,13 @@ const ProductDetail = () => {
   const liked = id ? has(id) : false;
   const added = id ? inCart(id) : false;
   const [activeImage, setActiveImage] = useState(0);
+  const [enquireOpen, setEnquireOpen] = useState(false);
+
+  const handleEnquireSubmit = (details: CustomerDetails) => {
+    if (!product) return;
+    const url = whatsappLink(product, details);
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   const handleToggleCart = () => {
     if (!product) return;
