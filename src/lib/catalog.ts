@@ -6,6 +6,15 @@ export const WHATSAPP_NUMBER = "917558998847";
 
 export const BRAND_NAME = "Catalog";
 
+// Optional fields some products may have
+export type ProductExtra = {
+  original_price?: number | string;
+  rating?: number;
+  reviews?: number;
+  brand?: string;
+  images?: string[];
+};
+
 export type Product = {
   id: string | number;
   name: string;
@@ -13,7 +22,7 @@ export type Product = {
   image_url: string;
   description: string;
   category: string;
-};
+} & ProductExtra;
 
 export class ExpiredLinkError extends Error {
   constructor(message = "This catalog link has expired or is invalid.") {
