@@ -66,7 +66,7 @@ const ProductDetail = () => {
           </h1>
           <button
             type="button"
-            onClick={() => setLiked((v) => !v)}
+            onClick={() => id && toggle(id)}
             aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
             className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
