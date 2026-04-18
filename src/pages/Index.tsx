@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExpiredLinkError, fetchProducts, whatsappFreshLinkRequest, type Product } from "@/lib/catalog";
 import { CatalogHeader } from "@/components/CatalogHeader";
 import { HeroFeature } from "@/components/HeroFeature";
-import { CategoryPills } from "@/components/CategoryPills";
+
 import { NewInShowcase } from "@/components/NewInShowcase";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
