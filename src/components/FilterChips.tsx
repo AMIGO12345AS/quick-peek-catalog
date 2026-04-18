@@ -1,24 +1,31 @@
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/catalog";
 
 export type SortKey = "featured" | "price-asc" | "price-desc" | "name-asc";
-export type PriceRange = "all" | "under-500" | "500-1500" | "1500-5000" | "5000-plus";
+export type PriceBounds = { min: number; max: number };
 
 type Props = {
   sort: SortKey;
   onSortChange: (s: SortKey) => void;
-  price: PriceRange;
-  onPriceChange: (p: PriceRange) => void;
+  priceRange: [number, number];
+  priceBounds: PriceBounds;
+  onPriceRangeChange: (range: [number, number]) => void;
   category: string;
   onClearCategory: () => void;
   query: string;
@@ -32,26 +39,28 @@ const sortLabel: Record<SortKey, string> = {
   "name-asc": "Name: A → Z",
 };
 
-const priceLabel: Record<PriceRange, string> = {
-  all: "Price",
-  "under-500": "Under 500",
-  "500-1500": "500 – 1,500",
-  "1500-5000": "1,500 – 5,000",
-  "5000-plus": "5,000+",
-};
-
 export const FilterChips = ({
   sort,
   onSortChange,
-  price,
-  onPriceChange,
+  priceRange,
+  priceBounds,
+  onPriceRangeChange,
   category,
   onClearCategory,
   query,
   onClearQuery,
 }: Props) => {
-  const activeCount =
-    (sort !== "featured" ? 1 : 0) + (price !== "all" ? 1 : 0);
+  const priceActive =
+    priceRange[0] > priceBounds.min || priceRange[1] < priceBounds.max;
+  const activeCount = (sort !== "featured" ? 1 : 0) + (priceActive ? 1 : 0);
+
+  // Step: nice round number based on bounds spread
+  const span = Math.max(1, priceBounds.max - priceBounds.min);
+  const step = span > 5000 ? 100 : span > 1000 ? 50 : 10;
+
+  const priceChipLabel = priceActive
+    ? `${formatPrice(priceRange[0])} – ${formatPrice(priceRange[1])}`
+    : "Price";
 
   return (
     <div className="-mx-4 overflow-x-auto px-4 no-scrollbar sm:-mx-8 sm:px-8">
@@ -84,32 +93,58 @@ export const FilterChips = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Price */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
+        {/* Price slider */}
+        <Popover>
+          <PopoverTrigger
             className={cn(
               "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary",
-              price !== "all" && "border-foreground bg-foreground text-background",
+              priceActive && "border-foreground bg-foreground text-background",
             )}
           >
-            {priceLabel[price]}
+            {priceChipLabel}
             <ChevronDown className="h-3 w-3" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-44">
-            <DropdownMenuLabel>Price range</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={price}
-              onValueChange={(v) => onPriceChange(v as PriceRange)}
-            >
-              {(Object.keys(priceLabel) as PriceRange[]).map((k) => (
-                <DropdownMenuRadioItem key={k} value={k}>
-                  {k === "all" ? "All prices" : priceLabel[k]}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Price range
+              </p>
+              {priceActive && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onPriceRangeChange([priceBounds.min, priceBounds.max])
+                  }
+                  className="text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <div className="mb-4 flex items-center justify-between text-sm font-bold tabular-nums text-foreground">
+              <span>{formatPrice(priceRange[0])}</span>
+              <span className="text-muted-foreground">—</span>
+              <span>{formatPrice(priceRange[1])}</span>
+            </div>
+            <Slider
+              min={priceBounds.min}
+              max={priceBounds.max}
+              step={step}
+              value={[priceRange[0], priceRange[1]]}
+              minStepsBetweenThumbs={1}
+              onValueChange={(v) => {
+                const [a, b] = v as number[];
+                onPriceRangeChange([a, b]);
+              }}
+              className="my-2"
+              aria-label="Price range"
+            />
+            <div className="mt-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <span>{formatPrice(priceBounds.min)}</span>
+              <span>{formatPrice(priceBounds.max)}</span>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Active category chip */}
         {category && category !== "All" && (
@@ -140,7 +175,7 @@ export const FilterChips = ({
             type="button"
             onClick={() => {
               onSortChange("featured");
-              onPriceChange("all");
+              onPriceRangeChange([priceBounds.min, priceBounds.max]);
             }}
             className="ml-auto shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground"
           >

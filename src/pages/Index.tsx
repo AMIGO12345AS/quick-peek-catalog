@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ExpiredLinkError, fetchProducts, whatsappFreshLinkRequest, type Product } from "@/lib/catalog";
+import {
+  ExpiredLinkError,
+  fetchProducts,
+  parsePrice,
+  whatsappFreshLinkRequest,
+  type Product,
+} from "@/lib/catalog";
 import { CatalogHeader } from "@/components/CatalogHeader";
 import { PromoBanner } from "@/components/PromoBanner";
 import { CategoryCircles } from "@/components/CategoryCircles";
 import { CuratedRow } from "@/components/CuratedRow";
 import { ProductCard } from "@/components/ProductCard";
 import { BottomTabBar } from "@/components/BottomTabBar";
-import { FilterChips, type PriceRange, type SortKey } from "@/components/FilterChips";
+import { FilterChips, type SortKey } from "@/components/FilterChips";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, MessageCircle, PackageOpen, RotateCw } from "lucide-react";
 
@@ -20,16 +26,8 @@ const useDebounced = <T,>(value: T, delay = 200) => {
   return v;
 };
 
-const inPriceRange = (price: number, range: PriceRange) => {
-  switch (range) {
-    case "under-500": return price < 500;
-    case "500-1500": return price >= 500 && price < 1500;
-    case "1500-5000": return price >= 1500 && price < 5000;
-    case "5000-plus": return price >= 5000;
-    case "all":
-    default: return true;
-  }
-};
+const roundDown = (n: number, step: number) => Math.floor(n / step) * step;
+const roundUp = (n: number, step: number) => Math.ceil(n / step) * step;
 
 const Index = () => {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
@@ -47,7 +45,6 @@ const Index = () => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState<SortKey>("featured");
-  const [price, setPrice] = useState<PriceRange>("all");
   const debouncedQuery = useDebounced(query, 150);
 
   const allProducts = data ?? [];
@@ -66,23 +63,55 @@ const Index = () => {
     return map;
   }, [allProducts]);
 
+  // Compute price bounds from data, rounded to nice steps
+  const priceBounds = useMemo(() => {
+    const prices = allProducts
+      .map((p) => parsePrice(p.price))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    if (!prices.length) return { min: 0, max: 10000 };
+    const rawMin = Math.min(...prices);
+    const rawMax = Math.max(...prices);
+    const span = rawMax - rawMin;
+    const step = span > 5000 ? 100 : span > 1000 ? 50 : 10;
+    const min = roundDown(rawMin, step);
+    const max = Math.max(min + step, roundUp(rawMax, step));
+    return { min, max };
+  }, [allProducts]);
+
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+
+  // Initialize / reset range when bounds change (data loaded)
+  useEffect(() => {
+    setPriceRange(([lo, hi]) => {
+      if (lo === 0 && hi === 0) return [priceBounds.min, priceBounds.max];
+      return [
+        Math.max(priceBounds.min, Math.min(lo, priceBounds.max)),
+        Math.min(priceBounds.max, Math.max(hi, priceBounds.min)),
+      ];
+    });
+  }, [priceBounds.min, priceBounds.max]);
+
+  const priceActive =
+    priceRange[0] > priceBounds.min || priceRange[1] < priceBounds.max;
+
   const filtered: Product[] = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
+    const [lo, hi] = priceRange;
     const list = allProducts.filter((p) => {
       const matchCat = category === "All" || p.category === category;
       const matchQ = !q || p.name?.toLowerCase().includes(q);
-      const n = Number(p.price);
-      const matchPrice = !Number.isFinite(n) ? true : inPriceRange(n, price);
+      const n = parsePrice(p.price);
+      const matchPrice = !Number.isFinite(n) ? true : n >= lo && n <= hi;
       return matchCat && matchQ && matchPrice;
     });
 
     const sorted = [...list];
     switch (sort) {
       case "price-asc":
-        sorted.sort((a, b) => Number(a.price) - Number(b.price));
+        sorted.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
         break;
       case "price-desc":
-        sorted.sort((a, b) => Number(b.price) - Number(a.price));
+        sorted.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
         break;
       case "name-asc":
         sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -92,7 +121,7 @@ const Index = () => {
         break;
     }
     return sorted;
-  }, [allProducts, debouncedQuery, category, sort, price]);
+  }, [allProducts, debouncedQuery, category, sort, priceRange]);
 
   const featured = allProducts[0];
   const curated = allProducts.slice(0, 8);
@@ -101,7 +130,7 @@ const Index = () => {
     category !== "All" ||
     debouncedQuery.trim().length > 0 ||
     sort !== "featured" ||
-    price !== "all";
+    priceActive;
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -192,8 +221,9 @@ const Index = () => {
               <FilterChips
                 sort={sort}
                 onSortChange={setSort}
-                price={price}
-                onPriceChange={setPrice}
+                priceRange={priceRange}
+                priceBounds={priceBounds}
+                onPriceRangeChange={setPriceRange}
                 category={category}
                 onClearCategory={() => setCategory("All")}
                 query={query}

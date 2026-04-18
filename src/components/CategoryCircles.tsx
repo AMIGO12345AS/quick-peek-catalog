@@ -31,7 +31,7 @@ export const CategoryCircles = ({
         </a>
       </div>
 
-      <div className="-mx-4 overflow-x-auto px-4 no-scrollbar sm:-mx-8 sm:px-8">
+      <div className="-mx-4 overflow-x-auto px-4 py-1 no-scrollbar sm:-mx-8 sm:px-8">
         <div className="flex gap-4">
           {categories.map((c) => {
             const active = c === activeCategory;
@@ -47,7 +47,7 @@ export const CategoryCircles = ({
                   className={cn(
                     "relative grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-secondary transition-all",
                     active
-                      ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
+                      ? "ring-2 ring-foreground"
                       : "ring-1 ring-border",
                   )}
                 >
