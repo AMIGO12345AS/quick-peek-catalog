@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ExpiredLinkError,
@@ -44,7 +45,22 @@ const Index = () => {
   const isExpired = error instanceof ExpiredLinkError;
 
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const category = searchParams.get("category") || "All";
+  const setCategory = useCallback(
+    (c: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (c === "All") next.delete("category");
+          else next.set("category", c);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
   const [sort, setSort] = useState<SortKey>("featured");
   const debouncedQuery = useDebounced(query, 150);
 
