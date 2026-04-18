@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Heart, Loader2, MessageCircle, Star } from "lucide-react";
+import { ArrowLeft, Check, Heart, Loader2, MessageCircle, ShoppingBag, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   ExpiredLinkError,
@@ -13,6 +13,7 @@ import { ProductImage } from "@/components/ProductImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/hooks/useCart";
 
 const ProductDetail = () => {
   const { id } = useParams();
