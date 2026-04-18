@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, Heart, Loader2, MessageCircle, ShoppingBag, Star } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   ExpiredLinkError,
   fetchProducts,
@@ -19,22 +20,28 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { has, toggle } = useWishlist();
-  const { has: inCart, add } = useCart();
+  const { has: inCart, add, remove } = useCart();
   const liked = id ? has(id) : false;
   const added = id ? inCart(id) : false;
   const [activeImage, setActiveImage] = useState(0);
 
-  const handleAddToCart = () => {
+  const handleToggleCart = () => {
     if (!product) return;
-    add(
-      {
-        id: String(product.id),
-        name: product.name,
-        price: Number(product.price) || 0,
-        image_url: product.image_url,
-      },
-      1,
-    );
+    if (added) {
+      remove(product.id);
+      toast(`Removed from cart`, { description: product.name });
+    } else {
+      add(
+        {
+          id: String(product.id),
+          name: product.name,
+          price: Number(product.price) || 0,
+          image_url: product.image_url,
+        },
+        1,
+      );
+      toast.success(`Added to cart`, { description: product.name });
+    }
   };
 
   const { data, isLoading, isError, error } = useQuery({
