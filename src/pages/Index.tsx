@@ -66,7 +66,7 @@ const Index = () => {
         onCategoryChange={setCategory}
       />
 
-      <main className="mx-auto max-w-7xl space-y-12 px-4 py-6 sm:px-8 sm:py-10">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-4 sm:space-y-12 sm:px-8 sm:py-10">
         {isLoading ? (
           <>
             <Skeleton className="h-[420px] w-full rounded-[2rem]" />
@@ -123,41 +123,24 @@ const Index = () => {
           )
         ) : (
           <>
-            {!isFiltering && (
-              <>
-                <HeroFeature product={featured} />
-                <CategoryPills
-                  categories={categories}
-                  activeCategory={category}
-                  onCategoryChange={setCategory}
-                />
-                <NewInShowcase
-                  title="New in"
-                  subtitle="Just landed — handpicked for the season."
-                  products={newIn}
-                />
-              </>
+            {!isFiltering && featured && (
+              <HeroFeature product={featured} />
             )}
 
             <section id="all-products" className="scroll-mt-24">
-              <div className="mb-5 flex items-end justify-between">
+              <div className="mb-3 flex items-end justify-between sm:mb-5">
                 <div>
-                  <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-                    {isFiltering ? "Results" : "The collection"}
+                  <h2 className="text-xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+                    {isFiltering ? "Results" : "Shop all"}
                   </h2>
-                  {!isFiltering && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Every piece, in one place.
-                    </p>
-                  )}
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs">
                   {filtered.length} {filtered.length === 1 ? "item" : "items"}
                 </span>
               </div>
 
               {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 rounded-[2rem] bg-card py-24 text-center shadow-card">
+                <div className="flex flex-col items-center justify-center gap-2 rounded-[1.5rem] bg-card py-16 text-center shadow-card sm:rounded-[2rem] sm:py-24">
                   <PackageOpen className="h-8 w-8 text-muted-foreground" aria-hidden />
                   <p className="text-base font-semibold">No products found</p>
                   <p className="text-sm text-muted-foreground">
@@ -165,13 +148,21 @@ const Index = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
                   {filtered.map((p) => (
                     <ProductCard key={p.id} product={p} />
                   ))}
                 </div>
               )}
             </section>
+
+            {!isFiltering && newIn.length > 0 && (
+              <NewInShowcase
+                title="New in"
+                subtitle="Just landed — handpicked for the season."
+                products={newIn}
+              />
+            )}
           </>
         )}
       </main>
