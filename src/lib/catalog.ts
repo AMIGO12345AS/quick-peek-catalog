@@ -93,7 +93,8 @@ export class ExpiredLinkError extends Error {
 export async function fetchProducts(): Promise<Product[]> {
   let res: Response;
   try {
-    res = await fetch(API_URL);
+    const url = await getCatalogUrl();
+    res = await fetch(url);
   } catch {
     throw new Error("Network error");
   }
