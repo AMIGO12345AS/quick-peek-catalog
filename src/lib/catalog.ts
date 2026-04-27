@@ -1,5 +1,36 @@
-export const API_URL =
-  "https://catalog-api.muvassirwork.workers.dev/?t=c13e98de2ebfafd2ce6b9716347e305fdc16d01a5d8885f20824a7c16042cfc3";
+export const API_BASE = "https://catalog-api.muvassirwork.workers.dev";
+
+// Must match the Cloudflare worker exactly
+const TOKEN_SECRET = "cybzone";
+
+function getISOWeekNumber(date: Date): number {
+  const d = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  );
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(
+    ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function getCatalogUrl(): Promise<string> {
+  const now = new Date();
+  // Worker uses date.getFullYear() (local) — mirror that to stay in sync.
+  const year = now.getFullYear();
+  const week = getISOWeekNumber(now);
+  const token = await sha256Hex(`${TOKEN_SECRET}${year}${week}`);
+  return `${API_BASE}/?t=${token}`;
+}
 
 // WhatsApp number in international format, no + or spaces
 export const WHATSAPP_NUMBER = "917558998847";
@@ -62,7 +93,8 @@ export class ExpiredLinkError extends Error {
 export async function fetchProducts(): Promise<Product[]> {
   let res: Response;
   try {
-    res = await fetch(API_URL);
+    const url = await getCatalogUrl();
+    res = await fetch(url);
   } catch {
     throw new Error("Network error");
   }
